@@ -1,0 +1,23 @@
+name: Mirror to GitLab
+on:
+  push:
+    branches: ["**"]
+    tags: ["**"]
+  delete:
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Push mirror to GitLab
+        env:
+          GITLAB_MIRROR_URL: ${{ secrets.GITLAB_MIRROR_URL }} # e.g. https://oauth2:<token>@gitlab.com/BENDER_5000/face-privacy-toolkit.git
+        run: |
+          if [ -z "$GITLAB_MIRROR_URL" ]; then
+            echo "GITLAB_MIRROR_URL secret not set; skipping mirror."
+            exit 0
+          fi
+          git remote add gitlab "$GITLAB_MIRROR_URL" || git remote set-url gitlab "$GITLAB_MIRROR_URL"
+          git push --force --tags gitlab "refs/remotes/origin/*:refs/heads/*"
