@@ -1,0 +1,23 @@
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install
+        run: pip install -r requirements.txt
+      - name: Syntax check
+        run: python -m py_compile face_privacy.py web_app.py
+      - name: Smoke test
+        run: |
+          python face_privacy.py --help
+          python -c "from PIL import Image; Image.new('RGB',(64,64),'white').save('t.png')"
+          python face_privacy.py exif t.png
+          python face_privacy.py redact t.png --region 10,10,20,20 --output t.redacted.png
+          python face_privacy.py hash . --compare t.png --limit 5
